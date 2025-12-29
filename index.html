@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Quiz Pengetahuan Umum 6A</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1b5e20;
+            --secondary: #2e7d32;
+            --accent: #ffeb3b;
+            --white: #ffffff;
+            --shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1b5e20 0%, #388e3c 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--white);
+            overflow-x: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: var(--shadow);
+            border: 2px solid rgba(255,255,255,0.2);
+            text-align: center;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .card-3d {
+            transition: transform 0.5s;
+        }
+
+        h1 { font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            box-sizing: border-box;
+            background: white;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 6px #2e7d32;
+            transition: all 0.2s;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px #2e7d32;
+        }
+
+        .hidden { display: none; }
+
+        /* Quiz Styles */
+        .option-container {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .option-btn {
+            background: white;
+            color: #1b5e20;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            transition: 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .option-btn:hover {
+            transform: scale(1.02);
+            background: #e8f5e9;
+        }
+
+        .radio-circle {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #1b5e20;
+            border-radius: 50%;
+            margin-right: 15px;
+            display: inline-block;
+        }
+
+        .selected {
+            border-color: var(--accent);
+            background: #fff9c4 !important;
+        }
+
+        .selected .radio-circle {
+            background: #1b5e20;
+            box-shadow: inset 0 0 0 3px white;
+        }
+
+        #timer {
+            font-weight: 800;
+            background: #f44336;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .info-card {
+            background: white;
+            color: #333;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container card-3d">
+    <!-- Screen 1: Login -->
+    <div id="login-screen">
+        <h1>GAME PENGETAHUAN UMUM</h1>
+        <p>Kelas 6A MI NU Hidayatul Mubtadiin</p>
+        <div class="input-group">
+            <label>Nama Peserta Didik:</label>
+            <input type="text" id="input-nama" placeholder="Ketik nama lengkap...">
+        </div>
+        <div class="input-group">
+            <label>Kelas:</label>
+            <input type="text" id="input-kelas" value="6A" readonly>
+        </div>
+        <div class="input-group">
+            <label>Nomor Absen:</label>
+            <input type="number" id="input-absen" placeholder="Nomor absen...">
+        </div>
+        <button class="btn" onclick="startSpeech()">MULAI</button>
+    </div>
+
+    <!-- Screen 2: Quiz -->
+    <div id="quiz-screen" class="hidden">
+        <div id="timer">Waktu: 90:00</div>
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+        <h2 id="question-text">Memuat pertanyaan...</h2>
+        <div class="option-container" id="options"></div>
+        <button class="btn" id="btn-next" onclick="nextQuestion()" disabled>LANJUT</button>
+    </div>
+
+    <!-- Screen 3: Result -->
+    <div id="result-screen" class="hidden">
+        <div class="info-card">
+            <h2 id="final-status">DATA TERKIRIM!</h2>
+            <div id="summary-text"></div>
+            <button class="btn" onclick="location.reload()">MAIN LAGI</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // DATA PERTANYAAN (50 SOAL)
+    const questionPool = [
+        { q: "Negara manakah yang dijuluki sebagai Negara Tirai Bambu?", a: ["Jepang", "Korea Selatan", "China", "Thailand"], c: 2 },
+        { q: "Apa nama ibu kota dari negara Australia?", a: ["Sydney", "Canberra", "Melbourne", "Perth"], c: 1 },
+        { q: "Benua terkecil di dunia adalah...", a: ["Asia", "Afrika", "Australia", "Eropa"], c: 2 },
+        { q: "Menara Pisa yang terkenal karena kemiringannya terletak di negara...", a: ["Prancis", "Jerman", "Italia", "Spanyol"], c: 2 },
+        { q: "Negara di Asia Tenggara yang tidak pernah dijajah oleh bangsa asing adalah...", a: ["Vietnam", "Thailand", "Filipina", "Malaysia"], c: 1 },
+        { q: "Sungai terpanjang di dunia yang mengalir di benua Afrika adalah...", a: ["Amazon", "Nil", "Mekong", "Mississippi"], c: 1 },
+        { q: "Negara yang memiliki jumlah penduduk terbanyak di dunia saat ini adalah...", a: ["China", "Amerika Serikat", "India", "Indonesia"], c: 2 },
+        { q: "Mata uang negara Jepang adalah...", a: ["Won", "Ringgit", "Yen", "Peso"], c: 2 },
+        { q: "Gunung tertinggi di dunia adalah Gunung Everest yang terletak di pegunungan...", a: ["Andes", "Alpen", "Himalaya", "Jayawijaya"], c: 2 },
+        { q: "Negara yang dikenal dengan julukan Negara Gajah Putih adalah...", a: ["Laos", "Thailand", "Kamboja", "Myanmar"], c: 1 },
+        // ... Tambahkan 40 soal lagi dengan format yang sama
+        { q: "Siapa penemu lampu pijar?", a: ["Isaac Newton", "Albert Einstein", "Thomas Alva Edison", "James Watt"], c: 2 },
+        { q: "Samudra terluas di dunia adalah...", a: ["Hindia", "Atlantik", "Pasifik", "Arktik"], c: 2 },
+        { q: "Candi Borobudur terletak di provinsi...", a: ["Jawa Barat", "Jawa Timur", "Jawa Tengah", "Yogyakarta"], c: 2 },
+        { q: "Planet terbesar dalam tata surya kita adalah...", a: ["Mars", "Saturnus", "Yupiter", "Neptunus"], c: 2 },
+        { q: "Alat musik angklung berasal dari daerah...", a: ["Bali", "Jawa Barat", "Sumatera Utara", "Papua"], c: 1 },
+        { q: "Ibu kota Indonesia di masa depan adalah...", a: ["Jakarta", "IKN Nusantara", "Bandung", "Surabaya"], c: 1 },
+        { q: "Burung Cendrawasih berasal dari pulau...", a: ["Kalimantan", "Sumatera", "Sulawesi", "Papua"], c: 3 },
+        { q: "Pancasila terdiri dari berapa sila?", a: ["4", "5", "6", "7"], c: 1 },
+        { q: "Presiden pertama Republik Indonesia adalah...", a: ["Soeharto", "BJ Habibie", "Soekarno", "Gus Dur"], c: 2 },
+        { q: "Ibu kota negara Inggris adalah...", a: ["Paris", "London", "Berlin", "Roma"], c: 1 },
+        { q: "Hewan tercepat di darat adalah...", a: ["Singa", "Kuda", "Cheetah", "Harimau"], c: 2 },
+        { q: "Warna bendera Indonesia adalah...", a: ["Merah Putih", "Putih Merah", "Merah Kuning", "Hijau Putih"], c: 0 },
+        { q: "Bahasa resmi negara Brasil adalah...", a: ["Inggris", "Spanyol", "Portugis", "Prancis"], c: 2 },
+        { q: "Patung Merlion merupakan simbol negara...", a: ["Malaysia", "Singapura", "Thailand", "Vietnam"], c: 1 },
+        { q: "Tari Kecak berasal dari...", a: ["Aceh", "Bali", "Papua", "Maluku"], c: 1 },
+        { q: "Bahan pembuat cokelat berasal dari biji...", a: ["Kopi", "Kakao", "Gandum", "Kedelai"], c: 1 },
+        { q: "Benua Hitam adalah julukan untuk benua...", a: ["Asia", "Eropa", "Afrika", "Amerika"], c: 2 },
+        { q: "Zat hijau daun pada tumbuhan disebut...", a: ["Oksigen", "Klorofil", "Stomata", "Akar"], c: 1 },
+        { q: "Pusat tata surya adalah...", a: ["Bumi", "Bulan", "Matahari", "Yupiter"], c: 2 },
+        { q: "Benua Merah adalah sebutan untuk benua...", a: ["Amerika", "Eropa", "Asia", "Afrika"], c: 0 },
+        { q: "Negara kincir angin adalah...", a: ["Jerman", "Belanda", "Inggris", "Prancis"], c: 1 },
+        { q: "Suku Aborigin adalah penduduk asli dari...", a: ["Selandia Baru", "Australia", "Amerika", "Kanada"], c: 1 },
+        { q: "Danau terbesar di Indonesia adalah...", a: ["Danau Singkarak", "Danau Toba", "Danau Poso", "Danau Sentani"], c: 1 },
+        { q: "Lagu Indonesia Raya diciptakan oleh...", a: ["Ibu Sud", "WR Supratman", "Kusbini", "Ismail Marzuki"], c: 1 },
+        { q: "Pulau terbesar di dunia adalah...", a: ["Jawa", "Kalimantan", "Greenland", "Madagaskar"], c: 2 },
+        { q: "Terusan yang menghubungkan Laut Tengah dan Laut Merah adalah...", a: ["Panama", "Suez", "Gibraltar", "Malaka"], c: 1 },
+        { q: "Kota yang dijuluki Kota Pelajar adalah...", a: ["Bandung", "Malang", "Yogyakarta", "Solo"], c: 2 },
+        { q: "Rumah adat Sumatera Barat disebut...", a: ["Joglo", "Gadang", "Honai", "Limas"], c: 1 },
+        { q: "Sila ke-3 Pancasila dilambangkan dengan...", a: ["Bintang", "Rantai", "Pohon Beringin", "Kepala Banteng"], c: 2 },
+        { q: "Bapak Proklamator Indonesia adalah Soekarno dan...", a: ["Adam Malik", "Moh. Hatta", "Ki Hajar Dewantara", "Sudirman"], c: 1 },
+        { q: "Mamalia laut yang dikenal sangat cerdas adalah...", a: ["Hiu", "Paus", "Lumba-lumba", "Pari"], c: 2 },
+        { q: "Senjata khas dari Jawa Barat adalah...", a: ["Keris", "Rencong", "Kujang", "Mandau"], c: 2 },
+        { q: "Negara terkecil di dunia adalah...", a: ["Monako", "Vatikan", "San Marino", "Maladewa"], c: 1 },
+        { q: "Gas yang kita hirup saat bernapas adalah...", a: ["Karbondioksida", "Nitrogen", "Oksigen", "Helium"], c: 2 },
+        { q: "Sudut siku-siku besarnya...", a: ["45 derajat", "90 derajat", "180 derajat", "360 derajat"], c: 1 },
+        { q: "Pelangi terdiri dari berapa warna utama?", a: ["5", "6", "7", "8"], c: 2 },
+        { q: "Siapa presiden Indonesia ke-7?", a: ["Susilo Bambang Yudhoyono", "Joko Widodo", "Megawati", "Prabowo"], c: 1 },
+        { q: "Nama samudra yang membatasi Indonesia di bagian selatan adalah...", a: ["Pasifik", "Hindia", "Atlantik", "Arktik"], c: 1 },
+        { q: "Hari Kemerdekaan RI diperingati setiap tanggal...", a: ["17 Juni", "17 Juli", "17 Agustus", "17 September"], c: 2 },
+        { q: "Ibu kota Jawa Timur adalah...", a: ["Semarang", "Surabaya", "Bandung", "Medan"], c: 1 }
+    ];
+
+    let currentQuestions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timerInterval;
+    let timeLeft = 90 * 60; // 90 menit dalam detik
+    let userName = "";
+    let userAbsen = "";
+
+    function speak(text) {
+        const msg = new SpeechSynthesisUtterance();
+        msg.text = text;
+        msg.lang = 'id-ID';
+        const voices = window.speechSynthesis.getVoices();
+        // Cari suara perempuan Indonesia
+        const idVoice = voices.find(v => v.lang.includes('id') && v.name.toLowerCase().includes('female'));
+        if(idVoice) msg.voice = idVoice;
+        window.speechSynthesis.speak(msg);
+    }
+
+    function startSpeech() {
+        userName = document.getElementById('input-nama').value;
+        userAbsen = document.getElementById('input-absen').value;
+
+        if(!userName || !userAbsen) {
+            alert("Harap isi Nama dan Nomor Absen!");
+            return;
+        }
+
+        const introText = "SELAMAT BERMAIN GAME DI DESAIN OLEH BAPAK MOHAMMAD ARWANI, SARJANA PENDIDIKAN ISLAM, YANG DIDESAIN KHUSUS UNTUK SISWA KELAS 6A MI NU HIDAYATUL MUBTADIIN UNDAAN KIDUL, UNTUK MENGISI LIBURAN SEKOLAH, SEMOGA BERMANFAAT";
+        speak(introText);
+        
+        setTimeout(() => {
+            startGame();
+        }, 1000);
+    }
+
+    function startGame() {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        
+        // Shuffle questions
+        currentQuestions = [...questionPool].sort(() => Math.random() - 0.5);
+        showQuestion();
+        startTimer();
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            let mins = Math.floor(timeLeft / 60);
+            let secs = timeLeft % 60;
+            document.getElementById('timer').innerText = `Waktu: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            
+            if(timeLeft <= 0) {
+                clearInterval(timerInterval);
+                finishGame();
+            }
+        }, 1000);
+    }
+
+    function showQuestion() {
+        const q = currentQuestions[currentIdx];
+        document.getElementById('question-text').innerText = `${currentIdx + 1}. ${q.q}`;
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        document.getElementById('btn-next').disabled = true;
+
+        q.a.forEach((opt, i) => {
+            const div = document.createElement('div');
+            div.className = 'option-btn';
+            div.innerHTML = `<span class="radio-circle"></span> ${opt}`;
+            div.onclick = () => selectOption(i, div);
+            optionsDiv.appendChild(div);
+        });
+
+        document.getElementById('progress-fill').style.width = `${(currentIdx / 50) * 100}%`;
+    }
+
+    let selectedIdx = null;
+    function selectOption(idx, el) {
+        selectedIdx = idx;
+        const allOpts = document.querySelectorAll('.option-btn');
+        allOpts.forEach(opt => opt.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('btn-next').disabled = false;
+    }
+
+    function nextQuestion() {
+        const correctIdx = currentQuestions[currentIdx].c;
+        
+        if(selectedIdx === correctIdx) {
+            score += 2;
+            speak(`Alhamdulillah benar ${userName}`);
+        } else {
+            speak(`semangat ya! ${userName}`);
+        }
+
+        currentIdx++;
+        if(currentIdx < 50) {
+            showQuestion();
+        } else {
+            finishGame();
+        }
+    }
+
+    function finishGame() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+
+        const durasiPakai = 5400 - timeLeft;
+        const dMins = Math.floor(durasiPakai / 60);
+        const dSecs = durasiPakai % 60;
+        const durasiStr = `${dMins} menit ${dSecs} detik`;
+
+        const summary = `
+            <p><strong>Nama:</strong> ${userName}</p>
+            <p><strong>No. Absen:</strong> ${userAbsen}</p>
+            <p><strong>Waktu Digunakan:</strong> ${durasiStr}</p>
+            <p style="font-size: 24px; color: #1b5e20;"><strong>Skor Akhir: ${score}</strong></p>
+        `;
+        document.getElementById('summary-text').innerHTML = summary;
+
+        speak("ALHAMDULILLAH SELESAI, KAMU HEBAT");
+
+        // Kirim data ke Spreadsheet
+        const data = {
+            nama: userName,
+            kelas: "6A",
+            absen: userAbsen,
+            skor: score,
+            waktu: new Date().toLocaleString(),
+            durasi: durasiStr
+        };
+
+        if(typeof google !== 'undefined') {
+            google.script.run.withSuccessHandler(res => {
+                document.getElementById('final-status').innerText = "Data tes online Anda sudah terkirim";
+            }).simpanSkor(data);
+        } else {
+            console.log("Simulasi kirim data:", data);
+        }
+    }
+
+    // Memuat suara agar siap saat tombol ditekan
+    window.speechSynthesis.getVoices();
+</script>
+
+</body>
+</html>
